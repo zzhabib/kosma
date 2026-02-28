@@ -43,8 +43,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
       bitecs:
-        specifier: ^0.3.40
-        version: 0.3.40
+        specifier: ^0.4.0
+        version: 0.4.0
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -560,8 +560,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  bitecs@0.3.40:
-    resolution: {integrity: sha512-wAylY4pNfX8IeIH5phtwt1lUNtHKrkoSNrArI7Ris2Y4nEQWFIVvXdgAuqprEg9bq8Wolmlj0gVfeG6MFmtI2Q==}
+  bitecs@0.4.0:
+    resolution: {integrity: sha512-ho6Zop/L79DRTnBAfakPpGPuX7y0+lAjX06CpaAW+5tnAc7BH3L3RlSrWAXAqwnQGDZ10GsoxaxyTTsddlun3g==}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -1268,7 +1268,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.0: {}
 
-  bitecs@0.3.40: {}
+  bitecs@0.4.0: {}
 
   browserslist@4.28.1:
     dependencies:

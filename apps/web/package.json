@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@kosma/core": "workspace:*",
-    "bitecs": "^0.3.40",
+    "bitecs": "^0.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.173.0"
