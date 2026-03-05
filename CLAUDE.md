@@ -81,9 +81,19 @@ User prompt
 
 - **`apps/web`** — Vite + React shell. Sends the prompt to the server, receives a `GenerateResponse`, calls `spawnEntity()` per entity to populate ECS data and descriptor components, then the hydration system creates Three.js objects from those descriptors. React is present for UI but the render loop is owned by Three.js.
 
+### ECS component layers
+
+ECS components in `apps/web` are split into two categories:
+
+**Descriptor components** — SoA numeric arrays, fully serializable. These are the only components the LLM produces or reads, and the only ones persisted to storage. Examples: `Position`, `Rotation`, `Scale`, `MeshDesc`. The component registry (`registry` map in `components.ts`) tracks all descriptor components by name, enabling generic `spawnEntity` (JSON → ECS) and `readEntity` (ECS → JSON) without hardcoded dispatch.
+
+**Runtime binding components** — AoS, ephemeral. Hold live engine objects that cannot be serialized. Created by hydration systems from descriptor data; discarded on save. Examples: `ThreeMesh`, `ThreeCamera`. These are never included in the registry and never sent over the wire.
+
+The hydration systems (`meshHydrationSystem`, etc.) are the one-way bridge: they query for entities that have a descriptor but no runtime binding, construct the engine object, and attach it.
+
 ### Key constraints to preserve
 
 - The LLM must only return data conforming to `GenerateResponse` — never scripts, functions, or eval-able strings.
 - `packages/core` schemas are the single source of truth for the API boundary; server validates before responding, frontend trusts the already-validated payload.
-- ECS components are split into three layers: **data** (SoA numeric, serializable), **descriptors** (SoA numeric, serializable — describe what Three.js objects to create), and **runtime bindings** (AoS, ephemeral — the actual Three.js objects). Only data and descriptor components are ever persisted or sent over the wire.
-- `meshHydrationSystem` is the bridge: it reads descriptor components and creates runtime bindings. Systems are pre-written and parameterized by data, never generated.
+- Only descriptor components are persisted or sent over the wire. Runtime bindings are always reconstructed by hydration systems on load.
+- Systems are pre-written and parameterized by data, never generated.

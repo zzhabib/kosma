@@ -1,5 +1,6 @@
 import { aos } from 'bitecs'
 import type * as THREE from 'three'
+import type RAPIER from '@dimforge/rapier3d-compat'
 
 export type SoAComponent = Record<string, unknown[]>
 
@@ -46,6 +47,29 @@ export const MeshDesc = register('MeshDesc', {
 export const GEOMETRY = { box: 0, sphere: 1, cylinder: 2 } as const
 export type GeometryName = keyof typeof GEOMETRY
 
+// Physics descriptor components — serializable SoA; physicsHydrationSystem creates Rapier bodies
+export const RigidbodyDesc = register('RigidbodyDesc', {
+  bodyType:     [] as number[],  // 0=dynamic, 1=kinematic, 2=fixed
+  restitution:  [] as number[],
+  friction:     [] as number[],
+  gravityScale: [] as number[],
+})
+
+export const ColliderDesc = register('ColliderDesc', {
+  shape:       [] as number[],  // 0=cuboid, 1=ball, 2=capsule
+  halfExtentX: [] as number[],
+  halfExtentY: [] as number[],
+  halfExtentZ: [] as number[],
+  radius:      [] as number[],
+  halfHeight:  [] as number[],
+})
+
+export const COLLIDER_SHAPE = { cuboid: 0, ball: 1, capsule: 2 } as const
+export type ColliderShapeName = keyof typeof COLLIDER_SHAPE
+
 // AoS Three.js binding components — the actual object lives at Component[eid]
 export const ThreeMesh   = aos<THREE.Mesh>()
 export const ThreeCamera = aos<THREE.PerspectiveCamera>()
+
+// AoS Rapier binding component — ephemeral, not registered, not serialized
+export const RapierBody = aos<RAPIER.RigidBody>()

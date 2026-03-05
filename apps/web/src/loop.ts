@@ -7,6 +7,9 @@ import { orbitCameraInputSystem } from './systems/orbitCameraInput'
 import { orbitCameraSystem } from './systems/orbitCamera'
 import { renderSyncSystem } from './systems/renderSync'
 import { meshHydrationSystem } from './systems/meshHydration'
+import { physicsHydrationSystem } from './systems/physicsHydration'
+import { physicsStepSystem } from './systems/physicsStep'
+import { physicsSyncSystem } from './systems/physicsSync'
 
 export function startLoop(
   renderer: THREE.WebGLRenderer,
@@ -23,6 +26,9 @@ export function startLoop(
     lastTime = now
 
     meshHydrationSystem(world, scene)
+    physicsHydrationSystem(world)
+    physicsStepSystem()
+    physicsSyncSystem(world)
     rotatorSystem(world, dt)
     orbitCameraInputSystem(world)
     orbitCameraSystem(world)

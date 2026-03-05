@@ -3,9 +3,11 @@ import { query } from 'bitecs'
 import { world } from './world'
 import { spawnEntity, spawnCamera, spawnPointerInput } from './entities'
 import { PointerInput, ThreeCamera } from './components'
+import { initPhysics } from './physics'
 import { startLoop } from './loop'
 
-export function startEngine(canvas: HTMLCanvasElement): () => void {
+export async function startEngine(canvas: HTMLCanvasElement): Promise<() => void> {
+  await initPhysics()
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -24,9 +26,23 @@ export function startEngine(canvas: HTMLCanvasElement): () => void {
       { name: 'Rotation',     data: { x: 0,   y: 0,   z: 0   } },
       { name: 'Scale',        data: { x: 1,   y: 4,   z: 1   } },
       { name: 'RotatorSpeed', data: { x: 0.4, y: 1.0, z: 0.2 } },
-      { name: 'MeshDesc',     data: { geometry: 0, color: 0xe74c3c } },
+      { name: 'MeshDesc', data: { geometry: 0, color: 0xe74c3c } },
+      { name: 'RigidbodyDesc', data: { bodyType: 0, restitution: 0.2, friction: 0.8, gravityScale: 1 } },
+      { name: 'ColliderDesc', data: { shape: 0, halfExtentX: 0.5, halfExtentY: 2, halfExtentZ: 0.5 } },
     ],
   })
+  // Ground plane — fixed body, wide cuboid
+  spawnEntity(world, {
+    components: [
+      { name: 'Position',     data: { x: 0,   y: -3,   z: 0  } },
+      { name: 'Rotation',     data: { x: 0,   y: 0,    z: 0  } },
+      { name: 'Scale',        data: { x: 20,  y: 0.5,  z: 20 } },
+      { name: 'MeshDesc',     data: { geometry: 0, color: 0x555555 } },
+      { name: 'RigidbodyDesc', data: { bodyType: 2, restitution: 0.3, friction: 0.8, gravityScale: 0 } },
+      { name: 'ColliderDesc', data: { shape: 0, halfExtentX: 10, halfExtentY: 0.25, halfExtentZ: 10 } },
+    ],
+  })
+
   spawnCamera(world)
   const inputEid = spawnPointerInput(world)
 

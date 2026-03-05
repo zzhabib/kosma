@@ -5,7 +5,11 @@ import { startEngine } from './engine'
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => startEngine(canvasRef.current!), [])
+  useEffect(() => {
+    let stop: (() => void) | undefined
+    startEngine(canvasRef.current!).then(fn => { stop = fn })
+    return () => stop?.()
+  }, [])
 
   return (
     <>
