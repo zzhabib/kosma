@@ -1,7 +1,8 @@
-import { addEntity, addComponent } from 'bitecs'
+import { addEntity, addComponent, createWorld } from 'bitecs'
 import * as THREE from 'three'
 import { registry, OrbitCamera, PointerInput, ThreeCamera } from './components'
-import type { EcsWorld } from './world'
+
+type EcsWorld = ReturnType<typeof createWorld>
 
 export interface ComponentEntry {
   name: string

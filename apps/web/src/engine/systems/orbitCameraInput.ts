@@ -1,8 +1,10 @@
 import { query } from 'bitecs'
-import type { EcsWorld } from '../world'
+import type { DataModel } from '../engine'
 import { PointerInput, OrbitCamera, ThreeCamera } from '../components'
 
-export function orbitCameraInputSystem(world: EcsWorld): void {
+export const priority = 60
+
+export default function orbitCameraInputSystem({ world }: DataModel): void {
   const inputEnts = query(world, [PointerInput])
   if (!inputEnts.length) return
   const inputEid = inputEnts[0]

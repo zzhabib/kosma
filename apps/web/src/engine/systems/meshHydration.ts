@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { query, addComponent, Not } from 'bitecs'
-import type { EcsWorld } from '../world'
+import type { DataModel } from '../engine'
 import { MeshDesc, ThreeMesh } from '../components'
+
+export const priority = 10
 
 const GEOMETRIES = [
   () => new THREE.BoxGeometry(),
@@ -9,9 +11,8 @@ const GEOMETRIES = [
   () => new THREE.CylinderGeometry(0.5, 0.5, 1, 16),
 ] as const
 
-export function meshHydrationSystem(world: EcsWorld, scene: THREE.Scene): void {
+export default function meshHydrationSystem({ world, scene }: DataModel): void {
   for (const eid of query(world, [MeshDesc, Not(ThreeMesh)])) {
-
     const geomFn = GEOMETRIES[MeshDesc.geometry[eid]] ?? GEOMETRIES[0]
     const mesh = new THREE.Mesh(
       geomFn(),

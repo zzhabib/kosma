@@ -1,7 +1,9 @@
 import { query, addComponent, Not } from 'bitecs'
-import type { EcsWorld } from '../world'
+import type { DataModel } from '../engine'
 import { RigidbodyDesc, ColliderDesc, RapierBody, Position } from '../components'
-import { getPhysicsWorld, RAPIER } from '../physics'
+import RAPIER from '@dimforge/rapier3d-compat'
+
+export const priority = 20
 
 const BODY_TYPES = [
   RAPIER.RigidBodyType.Dynamic,
@@ -9,8 +11,7 @@ const BODY_TYPES = [
   RAPIER.RigidBodyType.Fixed,
 ] as const
 
-export function physicsHydrationSystem(world: EcsWorld): void {
-  const physicsWorld = getPhysicsWorld()
+export default function physicsHydrationSystem({ world, physics: physicsWorld }: DataModel): void {
 
   for (const eid of query(world, [RigidbodyDesc, ColliderDesc, Not(RapierBody)])) {
     const bodyType = BODY_TYPES[RigidbodyDesc.bodyType[eid]] ?? RAPIER.RigidBodyType.Dynamic

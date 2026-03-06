@@ -1,8 +1,10 @@
 import { query } from 'bitecs'
-import type { EcsWorld } from '../world'
+import type { DataModel } from '../engine'
 import { OrbitCamera, ThreeCamera } from '../components'
 
-export function orbitCameraSystem(world: EcsWorld): void {
+export const priority = 70
+
+export default function orbitCameraSystem({ world }: DataModel): void {
   for (const eid of query(world, [OrbitCamera, ThreeCamera])) {
     const theta = OrbitCamera.theta[eid]
     const phi   = OrbitCamera.phi[eid]

@@ -1,15 +1,23 @@
 import { useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
-import { startEngine } from './engine'
+import { Engine } from './engine/engine'
+
+function useEngine(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+  useEffect(() => {
+    const engine = new Engine(canvasRef.current!)
+
+    engine.start()
+
+    return () => {
+      engine.stop()
+    }
+  }, [])
+}
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => {
-    let stop: (() => void) | undefined
-    startEngine(canvasRef.current!).then(fn => { stop = fn })
-    return () => stop?.()
-  }, [])
+  useEngine(canvasRef)
 
   return (
     <>

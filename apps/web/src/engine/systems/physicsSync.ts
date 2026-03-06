@@ -1,12 +1,14 @@
 import * as THREE from 'three'
 import { query } from 'bitecs'
-import type { EcsWorld } from '../world'
+import type { DataModel } from '../engine'
 import { RapierBody, Position, Rotation } from '../components'
+
+export const priority = 40
 
 const _quat = new THREE.Quaternion()
 const _euler = new THREE.Euler()
 
-export function physicsSyncSystem(world: EcsWorld): void {
+export default function physicsSyncSystem({ world }: DataModel): void {
   for (const eid of query(world, [RapierBody])) {
     const body = RapierBody[eid]
     if (!body) continue
