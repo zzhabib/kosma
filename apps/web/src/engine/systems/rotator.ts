@@ -1,6 +1,6 @@
 import { query } from 'bitecs'
-import type { DataModel } from '../engine'
-import { Rotation, RotatorSpeed } from '../components'
+import type { DataModel } from '@engine/engine'
+import { Rotation, RotatorSpeed } from '@engine/components'
 
 export const priority = 50
 

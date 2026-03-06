@@ -1,6 +1,6 @@
 import { query } from 'bitecs'
-import type { DataModel } from '../engine'
-import { OrbitCamera, ThreeCamera } from '../components'
+import type { DataModel } from '@engine/engine'
+import { OrbitCamera, ThreeCamera } from '@engine/components'
 
 export const priority = 60
 

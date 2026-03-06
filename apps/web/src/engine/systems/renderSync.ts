@@ -1,6 +1,6 @@
 import { query } from 'bitecs'
-import type { DataModel } from '../engine'
-import { ThreeMesh, Position, Rotation, Scale } from '../components'
+import type { DataModel } from '@engine/engine'
+import { ThreeMesh, Position, Rotation, Scale } from '@engine/components'
 
 export const priority = 80
 

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { query } from 'bitecs'
-import type { DataModel } from '../engine'
-import { RapierBody, Position, Rotation } from '../components'
+import type { DataModel } from '@engine/engine'
+import { RapierBody, Position, Rotation } from '@engine/components'
 
 export const priority = 40
 

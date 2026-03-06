@@ -1,4 +1,4 @@
-import type { DataModel } from '../engine'
+import type { DataModel } from '@engine/engine'
 
 export const priority = 30
 

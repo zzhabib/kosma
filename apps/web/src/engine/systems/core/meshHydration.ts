@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { query, addComponent, Not } from 'bitecs'
-import type { DataModel } from '../engine'
-import { MeshDesc, ThreeMesh } from '../components'
+import type { DataModel } from '@engine/engine'
+import { MeshDesc, ThreeMesh } from '@engine/components'
 
 export const priority = 10
 

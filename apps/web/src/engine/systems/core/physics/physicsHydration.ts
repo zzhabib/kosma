@@ -1,6 +1,6 @@
 import { query, addComponent, Not } from 'bitecs'
-import type { DataModel } from '../engine'
-import { RigidbodyDesc, ColliderDesc, RapierBody, Position } from '../components'
+import type { DataModel } from '@engine/engine'
+import { RigidbodyDesc, ColliderDesc, RapierBody, Position } from '@engine/components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 export const priority = 20

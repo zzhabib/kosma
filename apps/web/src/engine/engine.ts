@@ -25,7 +25,7 @@ export type System = (dataModel: DataModel, dt: number) => void
 
 type SystemModule = { default: System; priority?: number }
 
-const systemModules = import.meta.glob<SystemModule>('./systems/*.ts', { eager: true })
+const systemModules = import.meta.glob<SystemModule>('./systems/**/*.ts', { eager: true })
 
 const systems: System[] = Object.values(systemModules)
   .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
