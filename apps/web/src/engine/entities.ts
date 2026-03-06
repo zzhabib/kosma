@@ -1,6 +1,6 @@
 import { addEntity, addComponent, createWorld } from 'bitecs'
 import * as THREE from 'three'
-import { registry, OrbitCamera, PointerInput, ThreeCamera } from './components'
+import { registry, OrbitCamera, ThreeCamera } from './components'
 
 type EcsWorld = ReturnType<typeof createWorld>
 
@@ -45,12 +45,3 @@ export function spawnCamera(world: EcsWorld): void {
   ThreeCamera[eid] = cam
 }
 
-export function spawnPointerInput(world: EcsWorld): number {
-  const eid = addEntity(world)
-  addComponent(world, eid, PointerInput)
-  PointerInput.dx[eid]         = 0
-  PointerInput.dy[eid]         = 0
-  PointerInput.buttons[eid]    = 0
-  PointerInput.wheelDelta[eid] = 0
-  return eid
-}

@@ -30,14 +30,6 @@ export const OrbitCamera = register('OrbitCamera', {
   targetZ: [] as number[],
 })
 
-// Singleton — one entity per world, written by the DOM bridge each frame
-export const PointerInput = register('PointerInput', {
-  dx:         [] as number[],
-  dy:         [] as number[],
-  buttons:    [] as number[],
-  wheelDelta: [] as number[],
-})
-
 // Descriptor components — serializable SoA; hydration system creates runtime bindings from these
 export const MeshDesc = register('MeshDesc', {
   geometry: [] as number[],  // GEOMETRY enum index

@@ -1,16 +1,24 @@
 import * as THREE from 'three'
 import { createWorld, query } from 'bitecs'
-import { spawnCamera, spawnPointerInput } from './entities'
-import { PointerInput, ThreeCamera } from './components'
+import { spawnCamera } from './entities'
+import { ThreeCamera } from './components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 export type EcsWorld = ReturnType<typeof createWorld>
+
+export type InputState = {
+  dx: number
+  dy: number
+  buttons: number
+  wheelDelta: number
+}
 
 export type DataModel = {
   physics: RAPIER.World,
   scene: THREE.Scene,
   world: EcsWorld,
   canvas: HTMLCanvasElement,
+  input: InputState,
 }
 
 export type System = (dataModel: DataModel, dt: number) => void
@@ -42,9 +50,10 @@ export class Engine {
       physics: new RAPIER.World({ x: 0, y: -9.81, z: 0 }),
       scene: new THREE.Scene(),
       world: createWorld(),
+      input: { dx: 0, dy: 0, buttons: 0, wheelDelta: 0 },
     }
 
-    const { scene, world, canvas } = this.dataModel
+    const { scene, world, canvas, input } = this.dataModel
 
     scene.background = new THREE.Color('#111111')
     scene.add(new THREE.GridHelper(20, 20, '#333333', '#222222'))
@@ -68,39 +77,33 @@ export class Engine {
     this.cleanup.push(() => window.removeEventListener('resize', onResize))
 
     spawnCamera(world)
-    const inputEid = spawnPointerInput(world)
+    this.cleanup.push(this.bindInput(canvas, input))
 
-    let lastX = 0
-    let lastY = 0
-    const onPointerDown = (e: PointerEvent) => { lastX = e.clientX; lastY = e.clientY }
-    const onPointerMove = (e: PointerEvent) => {
-      PointerInput.dx[inputEid]     += e.clientX - lastX
-      PointerInput.dy[inputEid]     += e.clientY - lastY
-      PointerInput.buttons[inputEid] = e.buttons
-      lastX = e.clientX
-      lastY = e.clientY
-    }
-    const onPointerUp   = (e: PointerEvent) => { PointerInput.buttons[inputEid] = e.buttons }
-    const onContextMenu = (e: MouseEvent)   => e.preventDefault()
-    const onWheel       = (e: WheelEvent)   => { PointerInput.wheelDelta[inputEid] += e.deltaY }
-
-    canvas.addEventListener('pointerdown',  onPointerDown)
-    canvas.addEventListener('pointermove',  onPointerMove)
-    canvas.addEventListener('pointerup',    onPointerUp)
-    canvas.addEventListener('contextmenu',  onContextMenu)
-    canvas.addEventListener('wheel',        onWheel, { passive: true })
-    this.cleanup.push(() => {
-      canvas.removeEventListener('pointerdown',  onPointerDown)
-      canvas.removeEventListener('pointermove',  onPointerMove)
-      canvas.removeEventListener('pointerup',    onPointerUp)
-      canvas.removeEventListener('contextmenu',  onContextMenu)
-      canvas.removeEventListener('wheel',        onWheel)
-    })
-
-    this.tick(performance.now(), inputEid)
+    this.tick(performance.now())
   }
 
-  private tick(lastTime: number, inputEid: number) {
+  private bindInput(canvas: HTMLCanvasElement, input: InputState): () => void {
+    let lastX = 0
+    let lastY = 0
+    const controller = new AbortController()
+    const { signal } = controller
+
+    canvas.addEventListener('pointerdown',  (e: PointerEvent) => { lastX = e.clientX; lastY = e.clientY }, { signal })
+    canvas.addEventListener('pointermove',  (e: PointerEvent) => {
+      input.dx      += e.clientX - lastX
+      input.dy      += e.clientY - lastY
+      input.buttons  = e.buttons
+      lastX = e.clientX
+      lastY = e.clientY
+    }, { signal })
+    canvas.addEventListener('pointerup',    (e: PointerEvent) => { input.buttons = e.buttons }, { signal })
+    canvas.addEventListener('contextmenu',  (e: MouseEvent)   => e.preventDefault(), { signal })
+    canvas.addEventListener('wheel',        (e: WheelEvent)   => { input.wheelDelta += e.deltaY }, { passive: true, signal })
+
+    return () => controller.abort()
+  }
+
+  private tick(lastTime: number) {
     this.rafId = requestAnimationFrame(now => {
       const dt = Math.min((now - lastTime) / 1000, 0.1)
 
@@ -108,17 +111,17 @@ export class Engine {
         system(this.dataModel, dt)
       }
 
-      const { scene, world } = this.dataModel
+      const { scene, world, input } = this.dataModel
       const [camEid] = query(world, [ThreeCamera])
       if (camEid !== undefined) {
         this.renderer!.render(scene, ThreeCamera[camEid])
       }
 
-      PointerInput.dx[inputEid]         = 0
-      PointerInput.dy[inputEid]         = 0
-      PointerInput.wheelDelta[inputEid] = 0
+      input.dx         = 0
+      input.dy         = 0
+      input.wheelDelta = 0
 
-      this.tick(now, inputEid)
+      this.tick(now)
     })
   }
 

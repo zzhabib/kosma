@@ -1,18 +1,11 @@
 import { query } from 'bitecs'
 import type { DataModel } from '../engine'
-import { PointerInput, OrbitCamera, ThreeCamera } from '../components'
+import { OrbitCamera, ThreeCamera } from '../components'
 
 export const priority = 60
 
-export default function orbitCameraInputSystem({ world }: DataModel): void {
-  const inputEnts = query(world, [PointerInput])
-  if (!inputEnts.length) return
-  const inputEid = inputEnts[0]
-
-  const dx      = PointerInput.dx[inputEid]
-  const dy      = PointerInput.dy[inputEid]
-  const buttons = PointerInput.buttons[inputEid]
-  const wheel   = PointerInput.wheelDelta[inputEid]
+export default function orbitCameraInputSystem({ world, input }: DataModel): void {
+  const { dx, dy, buttons, wheelDelta: wheel } = input
 
   for (const eid of query(world, [OrbitCamera, ThreeCamera])) {
     if (buttons === 2 && (dx !== 0 || dy !== 0)) {
