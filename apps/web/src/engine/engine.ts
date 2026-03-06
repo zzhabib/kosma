@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { createWorld, query } from 'bitecs'
-import { spawnCamera } from './entities'
+import { spawnSampleEntities } from './entities'
 import { ThreeCamera } from './components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
@@ -76,7 +76,7 @@ export class Engine {
     window.addEventListener('resize', onResize)
     this.cleanup.push(() => window.removeEventListener('resize', onResize))
 
-    spawnCamera(world)
+    spawnSampleEntities(world)
     this.cleanup.push(this.bindInput(canvas, input))
 
     this.tick(performance.now())

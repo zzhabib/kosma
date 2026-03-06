@@ -1,12 +1,11 @@
 import { addEntity, addComponent, createWorld } from 'bitecs'
-import * as THREE from 'three'
-import { registry, OrbitCamera, ThreeCamera } from './components'
+import { registry } from './components'
 
 type EcsWorld = ReturnType<typeof createWorld>
 
 export interface ComponentEntry {
   name: string
-  data: Record<string, unknown>
+  data: Record<string, number>
 }
 
 export interface EntityDesc {
@@ -23,25 +22,56 @@ export function spawnEntity(world: EcsWorld, desc: EntityDesc): number {
     }
     addComponent(world, eid, component)
     for (const k of Object.keys(data)) {
-      component[k][eid] = data[k] as number
+      component[k][eid] = data[k]
     }
   }
   return eid
 }
 
-export function spawnCamera(world: EcsWorld): void {
-  const eid = addEntity(world)
+const sampleEntities: EntityDesc[] = [
+  // Camera
+  {
+    components: [
+      { name: 'OrbitCamera', data: { theta: Math.PI / 4, phi: Math.PI / 3, radius: 8, targetX: 0, targetY: 0, targetZ: 0 } },
+    ],
+  },
+  // Baseplate
+  {
+    components: [
+      { name: 'Position',      data: { x: 0,  y: -1,   z: 0  } },
+      { name: 'Rotation',      data: { x: 0,  y: 0,    z: 0  } },
+      { name: 'Scale',         data: { x: 20, y: 0.5,  z: 20 } },
+      { name: 'MeshDesc',      data: { geometry: 0, color: 0x888888 } },
+      { name: 'RigidbodyDesc', data: { bodyType: 2, restitution: 0.3, friction: 0.8, gravityScale: 0 } },
+      { name: 'ColliderDesc',  data: { shape: 0, halfExtentX: 10, halfExtentY: 0.25, halfExtentZ: 10 } },
+    ],
+  },
+  // Box
+  {
+    components: [
+      { name: 'Position',      data: { x: 0, y: 2, z: 0 } },
+      { name: 'Rotation',      data: { x: 0, y: 0, z: 0 } },
+      { name: 'Scale',         data: { x: 1, y: 1, z: 1 } },
+      { name: 'MeshDesc',      data: { geometry: 0, color: 0xe74c3c } },
+      { name: 'RigidbodyDesc', data: { bodyType: 0, restitution: 0.3, friction: 0.8, gravityScale: 1 } },
+      { name: 'ColliderDesc',  data: { shape: 0, halfExtentX: 0.5, halfExtentY: 0.5, halfExtentZ: 0.5 } },
+    ],
+  },
 
-  addComponent(world, eid, OrbitCamera)
-  OrbitCamera.theta[eid]   = Math.PI / 4
-  OrbitCamera.phi[eid]     = Math.PI / 3
-  OrbitCamera.radius[eid]  = 8
-  OrbitCamera.targetX[eid] = 0
-  OrbitCamera.targetY[eid] = 0
-  OrbitCamera.targetZ[eid] = 0
+  {
+    components: [
+      { name: 'Position', data: { x: 0.5, y: 4, z: 0 } },
+      { name: 'Rotation', data: { x: 0, y: 0, z: 0 } },
+      { name: 'Scale', data: { x: 1, y: 1, z: 1 } },
+      { name: 'MeshDesc', data: { geometry: 0, color: 0xe74c3c } },
+      { name: 'RigidbodyDesc', data: { bodyType: 0, restitution: 0.3, friction: 0.8, gravityScale: 1 } },
+      { name: 'ColliderDesc', data: { shape: 0, halfExtentX: 0.5, halfExtentY: 0.5, halfExtentZ: 0.5 } },
+    ],
+  },
+]
 
-  const cam = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100)
-  addComponent(world, eid, ThreeCamera)
-  ThreeCamera[eid] = cam
+export function spawnSampleEntities(world: EcsWorld): void {
+  for (const desc of sampleEntities) {
+    spawnEntity(world, desc)
+  }
 }
-
