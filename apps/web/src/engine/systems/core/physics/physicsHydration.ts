@@ -1,6 +1,6 @@
 import { query, addComponent, Not } from 'bitecs'
 import type { DataModel } from '@engine/engine'
-import { RigidbodyDesc, ColliderDesc, RapierBody, Position } from '@engine/components'
+import { RigidbodyDesc, ColliderDesc, RapierBody, Transform } from '@engine/components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 export const priority = 20
@@ -16,7 +16,7 @@ export default function physicsHydrationSystem({ world, physics: physicsWorld }:
   for (const eid of query(world, [RigidbodyDesc, ColliderDesc, Not(RapierBody)])) {
     const bodyType = BODY_TYPES[RigidbodyDesc.bodyType[eid]] ?? RAPIER.RigidBodyType.Dynamic
     const bodyDesc = new RAPIER.RigidBodyDesc(bodyType)
-      .setTranslation(Position.x[eid] ?? 0, Position.y[eid] ?? 0, Position.z[eid] ?? 0)
+      .setTranslation(Transform.px[eid] ?? 0, Transform.py[eid] ?? 0, Transform.pz[eid] ?? 0)
       .setGravityScale(RigidbodyDesc.gravityScale[eid] ?? 1)
 
     const body = physicsWorld.createRigidBody(bodyDesc)

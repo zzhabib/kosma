@@ -16,9 +16,12 @@ export type Slice<T extends Record<string, unknown[]>> = {
 }
 
 // SoA data components — pure numeric state, serializable, can come from WorldSpec
-export const Position     = register('Position', { x: [] as number[], y: [] as number[], z: [] as number[] })
-export const Rotation     = register('Rotation', { x: [] as number[], y: [] as number[], z: [] as number[] })
-export const Scale        = register('Scale', { x: [] as number[], y: [] as number[], z: [] as number[] })
+export const Transform = register('Transform', {
+  px: [] as number[], py: [] as number[], pz: [] as number[],
+  rx: [] as number[], ry: [] as number[], rz: [] as number[],
+  sx: [] as number[], sy: [] as number[], sz: [] as number[],
+})
+
 export const RotatorSpeed = register('RotatorSpeed', { x: [] as number[], y: [] as number[], z: [] as number[] })
 
 export const OrbitCamera = register('OrbitCamera', {
