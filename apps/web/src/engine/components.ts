@@ -59,6 +59,7 @@ export const ColliderDesc = register('ColliderDesc', {
   halfHeight:  [] as number[],
 })
 
+
 export const COLLIDER_SHAPE = { cuboid: 0, ball: 1, capsule: 2 } as const
 export type ColliderShapeName = keyof typeof COLLIDER_SHAPE
 
