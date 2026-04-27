@@ -1,19 +1,20 @@
 import { useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { useEngine } from './features/engine'
-import { AgentChat } from './features/agent'
+import { AgentFeature } from './features/agent'
+import { MenuFeature } from './features/menu'
+import { AppProvider } from './context/app-context'
 import './index.css'
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-
   useEngine(canvasRef)
-
   return (
-    <>
+    <AppProvider>
       <canvas ref={canvasRef} style={{ display: 'block' }} />
-      <AgentChat />
-    </>
+      <MenuFeature />
+      <AgentFeature />
+    </AppProvider>
   )
 }
 

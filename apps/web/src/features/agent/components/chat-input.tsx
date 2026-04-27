@@ -1,57 +1,66 @@
-import { useRef } from 'react'
-import { cn } from '@/lib/utils'
+import { useEffect, useRef, useCallback } from 'react'
 
 interface ChatInputProps {
-  disabled?: boolean
+  onSubmit: (text: string) => void
+  onClose: () => void
+  isLoading: boolean
 }
 
-export function ChatInput({ disabled }: ChatInputProps) {
+export function ChatInput({ onSubmit, onClose, isLoading }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  function handleInput() {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }
+  useEffect(() => {
+    textareaRef.current?.focus()
+  }, [])
+
+  const submit = useCallback(() => {
+    const text = textareaRef.current?.value.trim()
+    if (text && !isLoading) {
+      onSubmit(text)
+      onClose()
+    }
+  }, [isLoading, onSubmit, onClose])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        submit()
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    },
+    [submit, onClose],
+  )
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget
+    textarea.style.height = 'auto'
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
+  }, [])
 
   return (
-    <div className="p-4 border-t border-white/10">
-      <div
-        className={cn(
-          'flex flex-col gap-3 p-3 rounded-xl',
-          'bg-white/5 border border-white/12',
-          'focus-within:border-white/25 transition-colors duration-200',
-        )}
+    <div className="absolute bottom-8 left-8 pointer-events-auto flex gap-2 items-end">
+      <textarea
+        ref={textareaRef}
+        rows={1}
+        disabled={isLoading}
+        placeholder="type here…"
+        spellCheck="false"
+        onKeyDown={handleKeyDown}
+        onChange={handleChange}
+        className="bg-transparent text-sm text-white/85 placeholder:text-white/30 outline-none resize-none max-w-80 leading-relaxed"
+      />
+      <button
+        onClick={submit}
+        disabled={isLoading}
+        className="text-xs px-2 py-1 text-white/60 hover:text-white/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+        title="Send (Enter)"
       >
-        <textarea
-          ref={textareaRef}
-          rows={3}
-          disabled={disabled}
-          placeholder="Describe your world…"
-          onInput={handleInput}
-          onKeyDown={(e) => e.stopPropagation()}
-          className={cn(
-            'w-full bg-transparent text-sm text-white/85 placeholder:text-white/30',
-            'resize-none outline-none leading-relaxed',
-            'disabled:opacity-40',
-          )}
-        />
-        <div className="flex justify-end">
-          <button
-            disabled={disabled}
-            className={cn(
-              'text-xs px-3 py-1.5 rounded-lg',
-              'bg-white/10 border border-white/20 text-white/70',
-              'hover:bg-white/15 hover:text-white/90',
-              'transition-all duration-150',
-              'disabled:opacity-30 disabled:cursor-not-allowed',
-            )}
-          >
-            Generate
-          </button>
-        </div>
-      </div>
+        →
+      </button>
     </div>
   )
 }

@@ -1,16 +1,16 @@
 import { cn } from '@/lib/utils'
 
-interface ChatToggleProps {
+interface MenuToggleProps {
   onToggle: () => void
 }
 
-export function ChatToggle({ onToggle }: ChatToggleProps) {
+export function MenuToggle({ onToggle }: MenuToggleProps) {
   return (
     <button
       onClick={onToggle}
-      title="Open chat (T)"
+      title="Open menu (m)"
       className={cn(
-        'fixed bottom-6 right-6 z-50',
+        'fixed top-6 right-6 z-50',
         'h-9 px-4 rounded-full',
         'flex items-center gap-2',
         'bg-black/60 backdrop-blur-xl',
@@ -21,7 +21,7 @@ export function ChatToggle({ onToggle }: ChatToggleProps) {
       )}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-white/50" />
-      <span className="tracking-wide">Chat</span>
+      <span className="tracking-wide">Menu</span>
     </button>
   )
 }
