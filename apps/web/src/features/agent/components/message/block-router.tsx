@@ -10,7 +10,7 @@ export type BlockRendererContext = {
 
 type BlockRenderer = (block: ContentBlock, context: BlockRendererContext) => ReactNode
 
-const blockRenderers: Record<ContentBlock['type'], BlockRenderer> = {
+const blockRenderers: Partial<Record<ContentBlock['type'], BlockRenderer>> = {
   text: (block) => {
     if (block.type !== 'text') return null
     return <TextBlockView block={block} />

@@ -29,7 +29,7 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
 
 function MessageLine({ message }: { message: ChatMessageType }) {
   const rolePrefix = message.role === 'user' ? '> ' : '< '
-  const text = message.blocks
+  const text = message.content
     .filter((block) => block.type === 'text')
     .map((block) => (block.type === 'text' ? block.text : ''))
     .join(' ')

@@ -29,7 +29,7 @@ export function ChatMessage({
       </span>
       <div className={cn('max-w-[88%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed', roleStyles[message.role])}>
         <div className="space-y-2">
-          {message.blocks.map((block, i) => (
+          {message.content.map((block, i) => (
             <ContentBlockView key={i} block={block} context={context} />
           ))}
         </div>

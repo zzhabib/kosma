@@ -1,72 +1,32 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
-import Anthropic from '@anthropic-ai/sdk'
-import { z } from 'zod'
 
 const app = new Hono()
 
-app.use(
-  cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
-    credentials: true,
-  }),
-)
+app.use(cors({ origin: ['http://localhost:5173'] }))
 
-app.post('/chat/stream', async (c) => {
-  const body = await c.req.json()
+app.all('*', async (c) => {
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    'x-api-key': c.req.header('x-api-key') ?? '',
+    'anthropic-version': c.req.header('anthropic-version') ?? '2023-06-01',
+  }
 
-  const { apiKey, messages, thinking = false } = z
-    .object({
-      apiKey: z.string(),
-      messages: z.any(),
-      thinking: z.boolean().optional(),
-    })
-    .parse(body)
+  const beta = c.req.header('anthropic-beta')
+  if (beta) headers['anthropic-beta'] = beta
 
-  const { readable, writable } = new TransformStream<Uint8Array>()
-  const encoder = new TextEncoder()
-  const writer = writable.getWriter()
+  const response = await fetch(`https://api.anthropic.com${c.req.path}`, {
+    method: c.req.method,
+    headers,
+    body: c.req.method !== 'GET' ? await c.req.arrayBuffer() : undefined,
+  })
 
-  ;(async () => {
-    try {
-      const anthropic = new Anthropic({ apiKey })
-
-      const stream = await anthropic.messages.stream({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: thinking ? 12000 : 4096,
-        thinking: thinking ? { type: 'enabled', budget_tokens: 8000 } : undefined,
-        messages: messages,
-      })
-
-      for await (const event of stream) {
-        await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
-      }
-
-      await writer.close()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      await writer.write(
-        encoder.encode(`data: ${JSON.stringify({ type: 'error', error: message })}\n\n`),
-      )
-      await writer.close()
-    }
-  })()
-
-  return new Response(readable, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
+  return new Response(response.body, {
+    status: response.status,
+    headers: { 'content-type': response.headers.get('content-type') ?? 'application/json' },
   })
 })
 
-const port = 3000
-
-serve({
-  fetch: app.fetch,
-  port,
-})
-
-console.log(`Server running at http://localhost:${port}`)
+serve({ fetch: app.fetch, port: 3001 })
+console.log('Server running at http://localhost:3001')
