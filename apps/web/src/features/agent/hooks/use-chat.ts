@@ -2,6 +2,7 @@ import { useReducer, useCallback, useEffect, useRef } from 'react'
 import type { ContentBlock } from '@anthropic-ai/sdk/resources/messages'
 import { Agent, type AgentEvent } from '../agent'
 import type { ChatMessage } from '../types'
+import type { Toolbox } from '../toolbox'
 
 type ChatState = {
   messages: ChatMessage[]
@@ -48,6 +49,18 @@ function chatReducer(state: ChatState, action: AgentEvent): ChatState {
       return { ...state, messages, status: 'idle' }
     }
 
+    case 'tool_call': {
+      const messages = [...state.messages]
+      const last = messages[messages.length - 1]
+      if (!last || last.role !== 'assistant') return state
+      const block = { type: 'tool_use', id: action.id, name: action.name, input: action.input } as ContentBlock
+      messages[messages.length - 1] = { ...last, content: [...last.content, block] }
+      return { ...state, messages }
+    }
+
+    case 'tool_result':
+      return state
+
     case 'error':
       return { ...state, status: 'error', error: action.message }
 
@@ -58,13 +71,13 @@ function chatReducer(state: ChatState, action: AgentEvent): ChatState {
 
 const initialState: ChatState = { messages: [], status: 'idle', error: null }
 
-export function useChat(apiKey: string | null) {
+export function useChat(apiKey: string | null, toolbox: Toolbox | null) {
   const [state, dispatch] = useReducer(chatReducer, initialState)
   const agent = useRef<Agent | null>(null)
 
   useEffect(() => {
-    agent.current = apiKey ? new Agent(apiKey) : null
-  }, [apiKey])
+    agent.current = apiKey ? new Agent(apiKey, toolbox) : null
+  }, [apiKey, toolbox])
 
   const sendMessage = useCallback(async (text: string) => {
     if (!agent.current || !text.trim()) return

@@ -3,11 +3,12 @@ import { useAppContext } from '@/context/app-context'
 import { useChat } from './hooks/use-chat'
 import { ChatMessages } from './components/chat-messages'
 import { ChatInput } from './components/chat-input'
+import type { Toolbox } from './toolbox'
 
-export function AgentFeature() {
+export function AgentFeature({ toolbox }: { toolbox: Toolbox | null }) {
   const { apiKey } = useAppContext()
   const [open, setOpen] = useState(false)
-  const { messages, status, sendMessage } = useChat(apiKey)
+  const { messages, status, sendMessage } = useChat(apiKey, toolbox)
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

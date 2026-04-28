@@ -32,7 +32,7 @@ const systems: System[] = Object.values(systemModules)
   .map(m => m.default)
 
 export class Engine {
-  private dataModel!: DataModel
+  dataModel!: DataModel
   private renderer?: THREE.WebGLRenderer
   private canvas: HTMLCanvasElement
   private rafId = 0
