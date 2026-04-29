@@ -1,7 +1,6 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react'
-import type { ContentBlock } from '@anthropic-ai/sdk/resources/messages'
 import { Agent, type AgentEvent } from '../agent'
-import type { ChatMessage } from '../types'
+import type { ChatMessage, AppContentBlock, AppToolUseBlock } from '../types'
 import type { Toolbox } from '../toolbox'
 
 type ChatState = {
@@ -17,7 +16,7 @@ function chatReducer(state: ChatState, action: AgentEvent): ChatState {
         ...state,
         messages: [
           ...state.messages,
-          { id: action.id, role: 'user', content: [{ type: 'text', text: action.text } as ContentBlock], streaming: false },
+          { id: action.id, role: 'user', content: [{ type: 'text', text: action.text } as AppContentBlock], streaming: false },
         ],
       }
 
@@ -36,7 +35,7 @@ function chatReducer(state: ChatState, action: AgentEvent): ChatState {
       const prev = last.content[0]?.type === 'text' ? last.content[0].text : ''
       messages[messages.length - 1] = {
         ...last,
-        content: [{ type: 'text', text: prev + action.text } as ContentBlock],
+        content: [{ type: 'text', text: prev + action.text } as AppContentBlock],
       }
       return { ...state, messages }
     }
@@ -45,21 +44,31 @@ function chatReducer(state: ChatState, action: AgentEvent): ChatState {
       const messages = [...state.messages]
       const last = messages[messages.length - 1]
       if (!last || last.role !== 'assistant') return state
-      messages[messages.length - 1] = { ...last, content: action.content, streaming: false }
+      messages[messages.length - 1] = { ...last, content: action.content as AppContentBlock[], streaming: false }
       return { ...state, messages, status: 'idle' }
     }
 
-    case 'tool_call': {
+    // tool_call is a no-op: assistant_done already captures tool_use blocks from response.content
+    case 'tool_call':
+      return state
+
+    case 'tool_result': {
       const messages = [...state.messages]
-      const last = messages[messages.length - 1]
-      if (!last || last.role !== 'assistant') return state
-      const block = { type: 'tool_use', id: action.id, name: action.name, input: action.input } as ContentBlock
-      messages[messages.length - 1] = { ...last, content: [...last.content, block] }
+      let msgIdx = -1
+      let blockIdx = -1
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const m = messages[i]
+        if (m.role !== 'assistant') continue
+        const bi = m.content.findIndex(b => b.type === 'tool_use' && (b as AppToolUseBlock).id === action.toolUseId)
+        if (bi !== -1) { msgIdx = i; blockIdx = bi; break }
+      }
+      if (msgIdx === -1) return state
+      const msg = messages[msgIdx]
+      const content = [...msg.content]
+      content[blockIdx] = { ...content[blockIdx] as AppToolUseBlock, result: action.result }
+      messages[msgIdx] = { ...msg, content }
       return { ...state, messages }
     }
-
-    case 'tool_result':
-      return state
 
     case 'error':
       return { ...state, status: 'error', error: action.message }

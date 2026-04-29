@@ -1,6 +1,6 @@
-import { type ToolUseBlock } from '../../types'
+import { type AppToolUseBlock } from '../../types'
 
-export function ToolUseBlockView({ block }: { block: ToolUseBlock }) {
+export function ToolUseBlockView({ block }: { block: AppToolUseBlock }) {
   return (
     <div className="bg-white/5 border border-white/10 rounded-lg p-3 my-2 space-y-2">
       <div className="text-xs font-mono text-white/70">
@@ -9,6 +9,14 @@ export function ToolUseBlockView({ block }: { block: ToolUseBlock }) {
       <pre className="text-xs bg-black/20 rounded p-2 overflow-x-auto text-white/60 font-mono">
         {JSON.stringify(block.input, null, 2)}
       </pre>
+      {block.result !== undefined && (
+        <>
+          <div className="text-xs text-white/40 font-mono">result</div>
+          <pre className="text-xs bg-black/20 rounded p-2 overflow-x-auto text-white/60 font-mono">
+            {JSON.stringify(block.result, null, 2)}
+          </pre>
+        </>
+      )}
     </div>
   )
 }

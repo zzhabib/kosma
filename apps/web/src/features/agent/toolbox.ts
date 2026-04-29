@@ -3,6 +3,7 @@ import type { Tool } from '@anthropic-ai/sdk/resources/messages'
 import { query, hasComponent } from 'bitecs'
 import type { DataModel } from '@engine/engine'
 import { registry } from '@engine/components'
+import { spawnEntity } from '@engine/entities'
 
 type ToolShell<I extends z.ZodTypeAny = z.ZodTypeAny> = {
   name: string
@@ -27,6 +28,20 @@ export class Toolbox {
         description: 'Returns all component data for an entity by its ECS id.',
         input: z.object({ id: z.number() }),
         run: ({ id }) => this.readEntity(id),
+      },
+      {
+        name: 'spawn_entity',
+        description: 'Spawns a new entity with the given components. Returns the new entity id.',
+        input: z.object({
+          components: z.array(z.object({
+            name: z.string().describe('Component name, e.g. Transform, MeshDesc, RigidbodyDesc, ColliderDesc'),
+            data: z.record(z.string(), z.number()).describe('Component field values keyed by field name'),
+          })),
+        }),
+        run: ({ components }) => {
+          const eid = spawnEntity(this.dm.world, { components })
+          return { id: eid }
+        },
       },
     ]
   }

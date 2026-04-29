@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { type ContentBlock } from '../../types'
+import { type AppContentBlock, type AppToolUseBlock } from '../../types'
 import { TextBlockView } from './text-block'
 import { ThinkingBlockView } from './thinking-block'
 import { ToolUseBlockView } from './tool-use-block'
@@ -8,9 +8,9 @@ export type BlockRendererContext = {
   thinkingVisible: boolean
 }
 
-type BlockRenderer = (block: ContentBlock, context: BlockRendererContext) => ReactNode
+type BlockRenderer = (block: AppContentBlock, context: BlockRendererContext) => ReactNode
 
-const blockRenderers: Partial<Record<ContentBlock['type'], BlockRenderer>> = {
+const blockRenderers: Partial<Record<AppContentBlock['type'], BlockRenderer>> = {
   text: (block) => {
     if (block.type !== 'text') return null
     return <TextBlockView block={block} />
@@ -21,7 +21,7 @@ const blockRenderers: Partial<Record<ContentBlock['type'], BlockRenderer>> = {
   },
   tool_use: (block) => {
     if (block.type !== 'tool_use') return null
-    return <ToolUseBlockView block={block} />
+    return <ToolUseBlockView block={block as AppToolUseBlock} />
   },
 }
 
@@ -29,7 +29,7 @@ export function ContentBlockView({
   block,
   context,
 }: {
-  block: ContentBlock
+  block: AppContentBlock
   context: BlockRendererContext
 }) {
   const renderer = blockRenderers[block.type]

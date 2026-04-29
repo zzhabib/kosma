@@ -27,7 +27,7 @@ export function ChatMessage({
       <span className="text-[10px] text-white/40 tracking-widest uppercase px-1">
         {roleLabel[message.role]}
       </span>
-      <div className={cn('max-w-[88%] px-3 py-2.5 rounded-2xl text-sm leading-relaxed', roleStyles[message.role])}>
+      <div className={cn('max-w-[88%] px-4 py-3 rounded-2xl text-sm leading-relaxed', roleStyles[message.role])}>
         <div className="space-y-2">
           {message.content.map((block, i) => (
             <ContentBlockView key={i} block={block} context={context} />

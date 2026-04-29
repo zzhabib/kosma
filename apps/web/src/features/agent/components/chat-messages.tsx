@@ -1,14 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { type ChatMessage as ChatMessageType } from '../types'
+import { type ChatMessage } from '../types'
+import { ChatMessage as ChatMessageView } from './message'
 
-interface ChatMessagesProps {
-  messages: ChatMessageType[]
-}
-
-export function ChatMessages({ messages }: ChatMessagesProps) {
+export function ChatMessages({ messages }: { messages: ChatMessage[] }) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -18,26 +14,11 @@ export function ChatMessages({ messages }: ChatMessagesProps) {
   return (
     <div
       ref={scrollRef}
-      className="absolute top-8 left-8 max-w-[35%] max-h-[60vh] overflow-y-auto space-y-3 pointer-events-auto [scrollbar-width:none]"
+      className="absolute top-8 left-8 max-w-[35%] max-h-[60vh] overflow-y-auto space-y-3 pb-2 pointer-events-auto [scrollbar-width:none]"
     >
       {messages.map((msg) => (
-        <MessageLine key={msg.id} message={msg} />
+        <ChatMessageView key={msg.id} message={msg} thinkingVisible={false} />
       ))}
-    </div>
-  )
-}
-
-function MessageLine({ message }: { message: ChatMessageType }) {
-  const rolePrefix = message.role === 'user' ? '> ' : '< '
-  const text = message.content
-    .filter((block) => block.type === 'text')
-    .map((block) => (block.type === 'text' ? block.text : ''))
-    .join(' ')
-
-  return (
-    <div className="text-sm text-white/70 leading-relaxed">
-      <span className="text-white/50">{rolePrefix}</span>
-      {text}
     </div>
   )
 }
