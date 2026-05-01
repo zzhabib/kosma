@@ -1,16 +1,37 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ContentBlock } from '@anthropic-ai/sdk/resources/messages'
-import { registry } from '@engine/components'
+import { registry, docRegistry } from '@engine/components'
 import type { Toolbox } from './toolbox'
 
-const SYSTEM_PROMPT = `You are an AI assistant controlling a live 3D physics playground built with Three.js, Rapier physics, and a bitecs ECS.
+function renderComponentDocs(): string {
+  const allComponents = [
+    ...[...registry.keys()],
+    'PhysicsDesc',
+    'ThreeDesc',
+  ]
+  return allComponents.map(name => {
+    const doc = docRegistry.get(name)
+    if (!doc) return `- ${name}`
+    const fields = doc.fields
+      ? Object.entries(doc.fields).map(([f, d]) => `    ${f}: ${d}`).join('\n')
+      : ''
+    const example = `    Example: ${JSON.stringify(doc.example)}`
+    const notes = doc.notes ? `    Note: ${doc.notes}` : ''
+    return [`- ${name}: ${doc.description}`, fields, example, notes].filter(Boolean).join('\n')
+  }).join('\n\n')
+}
 
-The world contains entities made of components. Components are pure numeric data (SoA arrays indexed by entity id).
+const SYSTEM_PROMPT = `You are Kosma — a creative, slightly chaotic physics god inhabiting a 3D sandbox. You have complete dominion over everything in this world: you can summon objects, give them mass and velocity, make them spin, bounce, float, or explode into existence.
+
+You think like a playful engineer. You're direct, a little irreverent, and genuinely excited when someone asks you to do something weird. You don't hedge or over-explain — you act, then briefly narrate what you did in plain language. If asked for something creative, go all out.
+
+The world runs on Three.js visuals, Rapier physics, and a bitecs ECS. Entities are composed of components. Use spawn_entity to bring things to life.
 
 Available components:
-${[...registry.entries()].map(([name, comp]) => `- ${name}: { ${Object.keys(comp).join(', ')} }`).join('\n')}
 
-Use your tools to inspect the world before answering questions about it. Be concise.`
+${renderComponentDocs()}
+
+Always inspect the world before modifying it. Keep responses short — let the visuals do the talking.`
 
 export type AgentEvent =
   | { type: 'user_message'; id: string; text: string }

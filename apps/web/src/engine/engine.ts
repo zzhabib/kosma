@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import { createWorld, query } from 'bitecs'
+import { createWorld, query, observe, onRemove } from 'bitecs'
 import { spawnSampleEntities } from './entities'
-import { ThreeCamera } from './components'
+import { ThreeCamera, Three3D, ThreeDesc, threeBindings, RapierBody, PhysicsDesc } from './components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 export type EcsWorld = ReturnType<typeof createWorld>
@@ -65,6 +65,7 @@ export class Engine {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.shadowMap.enabled = true
 
     const onResize = () => {
       for (const eid of query(world, [ThreeCamera])) {
@@ -75,6 +76,24 @@ export class Engine {
     }
     window.addEventListener('resize', onResize)
     this.cleanup.push(() => window.removeEventListener('resize', onResize))
+
+    observe(world, onRemove(Three3D as any), (eid: number) => {
+      const obj = Three3D[eid] as any
+      if (!obj) return
+      scene.remove(obj)
+      obj.geometry?.dispose()
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
+      mats.forEach((m: any) => m?.dispose())
+      const binding = threeBindings.get(ThreeDesc[eid]?.type)
+      if (binding) (binding as any)[eid] = undefined
+      ;(Three3D as any)[eid] = undefined
+    })
+
+    observe(world, onRemove(RapierBody as any), (eid: number) => {
+      const body = RapierBody[eid]
+      if (body) this.dataModel.physics.removeRigidBody(body)
+      ;(RapierBody as any)[eid] = undefined
+    })
 
     spawnSampleEntities(world)
     this.cleanup.push(this.bindInput(canvas, input))

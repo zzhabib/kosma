@@ -1,11 +1,11 @@
 import { addEntity, addComponent, createWorld } from 'bitecs'
-import { registry } from './components'
+import { registry, ThreeSpec, ThreeDesc, PhysicsSpec, PhysicsDesc } from './components'
 
 type EcsWorld = ReturnType<typeof createWorld>
 
 export interface ComponentEntry {
   name: string
-  data: Record<string, number>
+  data: Record<string, unknown>
 }
 
 export interface EntityDesc {
@@ -15,6 +15,16 @@ export interface EntityDesc {
 export function spawnEntity(world: EcsWorld, desc: EntityDesc): number {
   const eid = addEntity(world)
   for (const { name, data } of desc.components) {
+    if (name === 'ThreeDesc') {
+      addComponent(world, eid, ThreeDesc)
+      ThreeDesc[eid] = data as ThreeSpec
+      continue
+    }
+    if (name === 'PhysicsDesc') {
+      addComponent(world, eid, PhysicsDesc)
+      PhysicsDesc[eid] = data as PhysicsSpec
+      continue
+    }
     const component = registry.get(name)
     if (!component) {
       console.warn(`spawnEntity: unknown component "${name}"`)
@@ -22,7 +32,7 @@ export function spawnEntity(world: EcsWorld, desc: EntityDesc): number {
     }
     addComponent(world, eid, component)
     for (const k of Object.keys(data)) {
-      component[k][eid] = data[k]
+      component[k][eid] = data[k] as number
     }
   }
   return eid
@@ -38,28 +48,25 @@ const sampleEntities: EntityDesc[] = [
   // Baseplate
   {
     components: [
-      { name: 'Transform',     data: { px: 0, py: -1, pz: 0, rx: 0, ry: 0, rz: 0, sx: 20, sy: 0.5, sz: 20 } },
-      { name: 'MeshDesc',      data: { geometry: 0, color: 0x888888 } },
-      { name: 'RigidbodyDesc', data: { bodyType: 2, restitution: 0.3, friction: 0.8, gravityScale: 0 } },
-      { name: 'ColliderDesc',  data: { shape: 0, halfExtentX: 10, halfExtentY: 0.25, halfExtentZ: 10 } },
+      { name: 'Transform',   data: { px: 0, py: -1, pz: 0, rx: 0, ry: 0, rz: 0, sx: 20, sy: 0.5, sz: 20 } },
+      { name: 'PhysicsDesc', data: { body: 'fixed', shape: 'cuboid', shapeArgs: [10, 0.25, 10], restitution: 0.3, friction: 0.8 } },
+      { name: 'ThreeDesc',   data: { type: 'Mesh', geometry: { type: 'BoxGeometry', args: [1, 1, 1] }, material: { type: 'MeshStandardMaterial', params: { color: 0x888888 } } } },
     ],
   },
   // Box
   {
     components: [
-      { name: 'Transform',     data: { px: 0, py: 2, pz: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 } },
-      { name: 'MeshDesc',      data: { geometry: 0, color: 0xe74c3c } },
-      { name: 'RigidbodyDesc', data: { bodyType: 0, restitution: 0.3, friction: 0.8, gravityScale: 1 } },
-      { name: 'ColliderDesc',  data: { shape: 0, halfExtentX: 0.5, halfExtentY: 0.5, halfExtentZ: 0.5 } },
+      { name: 'Transform',   data: { px: 0, py: 2, pz: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 } },
+      { name: 'PhysicsDesc', data: { body: 'dynamic', shape: 'cuboid', shapeArgs: [0.5, 0.5, 0.5], restitution: 0.3, friction: 0.8, gravityScale: 1 } },
+      { name: 'ThreeDesc',   data: { type: 'Mesh', geometry: { type: 'BoxGeometry', args: [1, 1, 1] }, material: { type: 'MeshStandardMaterial', params: { color: 0xe74c3c } } } },
     ],
   },
   // Box 2
   {
     components: [
-      { name: 'Transform',     data: { px: 0.5, py: 4, pz: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 } },
-      { name: 'MeshDesc',      data: { geometry: 0, color: 0xe74c3c } },
-      { name: 'RigidbodyDesc', data: { bodyType: 0, restitution: 0.3, friction: 0.8, gravityScale: 1 } },
-      { name: 'ColliderDesc',  data: { shape: 0, halfExtentX: 0.5, halfExtentY: 0.5, halfExtentZ: 0.5 } },
+      { name: 'Transform',   data: { px: 0.5, py: 4, pz: 0, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 } },
+      { name: 'PhysicsDesc', data: { body: 'dynamic', shape: 'cuboid', shapeArgs: [0.5, 0.5, 0.5], restitution: 0.3, friction: 0.8, gravityScale: 1 } },
+      { name: 'ThreeDesc',   data: { type: 'Mesh', geometry: { type: 'BoxGeometry', args: [1, 1, 1] }, material: { type: 'MeshStandardMaterial', params: { color: 0xe74c3c } } } },
     ],
   },
 ]

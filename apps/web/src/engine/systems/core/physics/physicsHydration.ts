@@ -1,49 +1,29 @@
 import { query, addComponent, Not } from 'bitecs'
 import type { DataModel } from '@engine/engine'
-import { RigidbodyDesc, ColliderDesc, RapierBody, Transform } from '@engine/components'
+import { PhysicsDesc, RapierBody, Transform } from '@engine/components'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 export const priority = 20
 
-const BODY_TYPES = [
-  RAPIER.RigidBodyType.Dynamic,
-  RAPIER.RigidBodyType.KinematicPositionBased,
-  RAPIER.RigidBodyType.Fixed,
-] as const
+export default function physicsHydrationSystem({ world, physics }: DataModel): void {
+  for (const eid of query(world, [PhysicsDesc, Not(RapierBody)])) {
+    const spec = PhysicsDesc[eid]
 
-export default function physicsHydrationSystem({ world, physics: physicsWorld }: DataModel): void {
+    const bodyDesc = (RAPIER.RigidBodyDesc as any)[spec.body]()
+    bodyDesc.setTranslation(Transform.px[eid] ?? 0, Transform.py[eid] ?? 0, Transform.pz[eid] ?? 0)
+    if (spec.gravityScale  !== undefined) bodyDesc.setGravityScale(spec.gravityScale)
+    if (spec.linearDamping !== undefined) bodyDesc.setLinearDamping(spec.linearDamping)
+    if (spec.angularDamping !== undefined) bodyDesc.setAngularDamping(spec.angularDamping)
 
-  for (const eid of query(world, [RigidbodyDesc, ColliderDesc, Not(RapierBody)])) {
-    const bodyType = BODY_TYPES[RigidbodyDesc.bodyType[eid]] ?? RAPIER.RigidBodyType.Dynamic
-    const bodyDesc = new RAPIER.RigidBodyDesc(bodyType)
-      .setTranslation(Transform.px[eid] ?? 0, Transform.py[eid] ?? 0, Transform.pz[eid] ?? 0)
-      .setGravityScale(RigidbodyDesc.gravityScale[eid] ?? 1)
+    const body = physics.createRigidBody(bodyDesc)
 
-    const body = physicsWorld.createRigidBody(bodyDesc)
+    const colliderDesc = (RAPIER.ColliderDesc as any)[spec.shape](...spec.shapeArgs)
+    if (spec.restitution !== undefined) colliderDesc.setRestitution(spec.restitution)
+    if (spec.friction    !== undefined) colliderDesc.setFriction(spec.friction)
+    if (spec.density     !== undefined) colliderDesc.setDensity(spec.density)
+    if (spec.sensor      !== undefined) colliderDesc.setSensor(spec.sensor)
 
-    const shape = ColliderDesc.shape[eid]
-    let colliderDesc: RAPIER.ColliderDesc
-    if (shape === 1) {
-      colliderDesc = RAPIER.ColliderDesc.ball(ColliderDesc.radius[eid] ?? 0.5)
-    } else if (shape === 2) {
-      colliderDesc = RAPIER.ColliderDesc.capsule(
-        ColliderDesc.halfHeight[eid] ?? 0.5,
-        ColliderDesc.radius[eid] ?? 0.5,
-      )
-    } else {
-      // default: cuboid
-      colliderDesc = RAPIER.ColliderDesc.cuboid(
-        ColliderDesc.halfExtentX[eid] ?? 0.5,
-        ColliderDesc.halfExtentY[eid] ?? 0.5,
-        ColliderDesc.halfExtentZ[eid] ?? 0.5,
-      )
-    }
-
-    colliderDesc
-      .setRestitution(RigidbodyDesc.restitution[eid] ?? 0)
-      .setFriction(RigidbodyDesc.friction[eid] ?? 0.5)
-
-    physicsWorld.createCollider(colliderDesc, body)
+    physics.createCollider(colliderDesc, body)
 
     addComponent(world, eid, RapierBody)
     RapierBody[eid] = body
