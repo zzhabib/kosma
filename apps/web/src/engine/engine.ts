@@ -24,12 +24,10 @@ export type DataModel = {
 export type System = (dataModel: DataModel, dt: number) => void
 
 type SystemModule = { default: System; priority?: number }
+type SystemEntry = { id: string; fn: System; priority: number; enabled: boolean; origin: 'packaged' | 'agent'; source?: string }
 
 const systemModules = import.meta.glob<SystemModule>('./systems/**/*.ts', { eager: true })
-
-const systems: System[] = Object.values(systemModules)
-  .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
-  .map(m => m.default)
+const systemSources = import.meta.glob<string>('./systems/**/*.ts', { query: '?raw', import: 'default', eager: true })
 
 export class Engine {
   dataModel!: DataModel
@@ -37,6 +35,8 @@ export class Engine {
   private canvas: HTMLCanvasElement
   private rafId = 0
   private cleanup: Array<() => void> = []
+  private systemMap = new Map<string, SystemEntry>()
+  private sortedSystems: SystemEntry[] = []
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -95,10 +95,22 @@ export class Engine {
       ;(RapierBody as any)[eid] = undefined
     })
 
+    for (const [key, mod] of Object.entries(systemModules)) {
+      const id = key.replace(/^\.\/systems\//, '').replace(/\.ts$/, '')
+      this.systemMap.set(id, { id, fn: mod.default, priority: mod.priority ?? 0, enabled: true, origin: 'packaged', source: systemSources[key] })
+    }
+    this.rebuildSortedSystems()
+
     spawnSampleEntities(world)
     this.cleanup.push(this.bindInput(canvas, input))
 
     this.tick(performance.now())
+  }
+
+  private rebuildSortedSystems(): void {
+    this.sortedSystems = [...this.systemMap.values()]
+      .filter(e => e.enabled)
+      .sort((a, b) => a.priority - b.priority)
   }
 
   private bindInput(canvas: HTMLCanvasElement, input: InputState): () => void {
@@ -126,8 +138,12 @@ export class Engine {
     this.rafId = requestAnimationFrame(now => {
       const dt = Math.min((now - lastTime) / 1000, 0.1)
 
-      for (const system of systems) {
-        system(this.dataModel, dt)
+      for (const entry of this.sortedSystems) {
+        try {
+          entry.fn(this.dataModel, dt)
+        } catch (err) {
+          console.error(`[engine] system "${entry.id}" threw:`, err)
+        }
       }
 
       const { scene, world, input } = this.dataModel
@@ -148,5 +164,39 @@ export class Engine {
     cancelAnimationFrame(this.rafId)
     for (const fn of this.cleanup) fn()
     this.renderer?.dispose()
+  }
+
+  addSystem(id: string, fn: System, priority = 0, source?: string): void {
+    this.systemMap.set(id, { id, fn, priority, enabled: true, origin: 'agent', source })
+    this.rebuildSortedSystems()
+  }
+
+  getSystem(id: string): { id: string; priority: number; enabled: boolean; origin: 'packaged' | 'agent'; source?: string } | undefined {
+    const e = this.systemMap.get(id)
+    if (!e) return undefined
+    return { id: e.id, priority: e.priority, enabled: e.enabled, origin: e.origin, source: e.source }
+  }
+
+  listSystems(): Array<{ id: string; priority: number; enabled: boolean; origin: 'packaged' | 'agent' }> {
+    return [...this.systemMap.values()].map(({ id, priority, enabled, origin }) => ({ id, priority, enabled, origin }))
+  }
+
+  getSystemSource(id: string): string | undefined {
+    return this.systemMap.get(id)?.source
+  }
+
+  removeSystem(id: string): void {
+    this.systemMap.delete(id)
+    this.rebuildSortedSystems()
+  }
+
+  enableSystem(id: string): void {
+    const e = this.systemMap.get(id)
+    if (e) { e.enabled = true; this.rebuildSortedSystems() }
+  }
+
+  disableSystem(id: string): void {
+    const e = this.systemMap.get(id)
+    if (e) { e.enabled = false; this.rebuildSortedSystems() }
   }
 }

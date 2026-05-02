@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Engine, type DataModel } from '@engine/engine'
+import { Engine } from '@engine/engine'
 
-export function useEngine(canvasRef: React.RefObject<HTMLCanvasElement | null>): DataModel | null {
-  const [dataModel, setDataModel] = useState<DataModel | null>(null)
+export function useEngine(canvasRef: React.RefObject<HTMLCanvasElement | null>): Engine | null {
+  const [engine, setEngine] = useState<Engine | null>(null)
 
   useEffect(() => {
-    const engine = new Engine(canvasRef.current!)
-    engine.start().then(() => setDataModel(engine.dataModel))
-    return () => engine.stop()
+    const eng = new Engine(canvasRef.current!)
+    eng.start().then(() => setEngine(eng))
+    return () => eng.stop()
   }, [])
 
-  return dataModel
+  return engine
 }

@@ -9,8 +9,8 @@ import './index.css'
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const dataModel = useEngine(canvasRef)
-  const toolbox = useMemo(() => dataModel ? new Toolbox(dataModel) : null, [dataModel])
+  const engine = useEngine(canvasRef)
+  const toolbox = useMemo(() => engine ? new Toolbox(engine) : null, [engine])
 
   return (
     <AppProvider>
