@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { query, hasComponent } from 'bitecs'
-import { registry } from '@engine/components'
+import { registry, ThreeDesc } from '@engine/components'
 import type { Engine } from '@engine/engine'
 
 export interface EntityInfo {
   id: number
   components: string[]
+  threeType?: string
 }
 
 export function useEntities(engine: Engine | null): EntityInfo[] {
@@ -28,6 +29,7 @@ export function useEntities(engine: Engine | null): EntityInfo[] {
         components: entries
           .filter(([, comp]) => hasComponent(world, eid, comp as any))
           .map(([name]) => name),
+        threeType: hasComponent(world, eid, ThreeDesc as any) ? (ThreeDesc[eid] as any)?.type : undefined,
       }))
 
       setSnapshot(prev =>

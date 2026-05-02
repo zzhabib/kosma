@@ -13,7 +13,10 @@ export default function threeHydrationSystem({ world, scene }: DataModel): void 
     if (spec.geometry) {
       const geo = new (THREE as any)[spec.geometry.type](...(spec.geometry.args ?? []))
       const mat = new (THREE as any)[spec.material!.type](spec.material?.params ?? {})
-      obj = new THREE.Mesh(geo, mat)
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      obj = mesh
     } else {
       obj = new (THREE as any)[spec.type](...(spec.args ?? []))
     }

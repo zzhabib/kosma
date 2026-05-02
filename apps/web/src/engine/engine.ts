@@ -1,8 +1,10 @@
 import * as THREE from 'three'
+import { Sky } from 'three/examples/jsm/objects/Sky.js'
 import { createWorld, query, observe, onRemove } from 'bitecs'
 import { spawnSampleEntities } from './entities'
 import { ThreeCamera, Three3D, ThreeDesc, threeBindings, RapierBody, PhysicsDesc } from './components'
 import RAPIER from '@dimforge/rapier3d-compat'
+import { loadStaticWorld } from './lib/loadStaticWorld'
 
 export type EcsWorld = ReturnType<typeof createWorld>
 
@@ -55,17 +57,57 @@ export class Engine {
 
     const { scene, world, canvas, input } = this.dataModel
 
-    scene.background = new THREE.Color('#111111')
-    scene.add(new THREE.GridHelper(20, 20, '#333333', '#222222'))
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5))
-    const sun = new THREE.DirectionalLight(0xffffff, 1.5)
-    sun.position.set(5, 10, 5)
+    const sky = new Sky()
+    sky.scale.setScalar(10000)
+    scene.add(sky)
+    const skyUniforms = sky.material.uniforms
+    skyUniforms['turbidity'].value = 10
+    skyUniforms['rayleigh'].value = 2
+    skyUniforms['mieCoefficient'].value = 0.005
+    skyUniforms['mieDirectionalG'].value = 0.8
+
+    const sunPos = new THREE.Vector3()
+    sunPos.setFromSphericalCoords(1, THREE.MathUtils.degToRad(45), THREE.MathUtils.degToRad(210))
+    skyUniforms['sunPosition'].value.copy(sunPos)
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(1000, 1000),
+      new THREE.MeshStandardMaterial({ color: '#6b8c4a', roughness: 1, metalness: 0 })
+    )
+    ground.rotation.x = -Math.PI / 2
+    ground.receiveShadow = true
+    scene.add(ground)
+
+    const { physics } = this.dataModel
+    const groundBody = physics.createRigidBody(RAPIER.RigidBodyDesc.fixed())
+    physics.createCollider(RAPIER.ColliderDesc.cuboid(500, 0.05, 500), groundBody)
+
+    // Drop any .glb into apps/web/public/ and uncomment:
+    // loadStaticWorld(`${import.meta.env.BASE_URL}my-world.glb`, scene, physics)
+    loadStaticWorld(`${import.meta.env.BASE_URL}models/building-a.glb`, scene, physics, `${import.meta.env.BASE_URL}models/variation-a.png`).catch(err => console.error('Failed to load static world:', err))
+
+    scene.add(new THREE.HemisphereLight(0x87ceeb, 0x5a7a3a, 1.2))
+
+    const sun = new THREE.DirectionalLight(0xfffde7, 4)
+    sun.position.copy(sunPos).multiplyScalar(100)
+    sun.castShadow = true
+    sun.shadow.camera.near = 0.5
+    sun.shadow.camera.far = 500
+    sun.shadow.camera.left = -50
+    sun.shadow.camera.right = 50
+    sun.shadow.camera.top = 50
+    sun.shadow.camera.bottom = -50
+    sun.shadow.mapSize.set(2048, 2048)
     scene.add(sun)
+
+    scene.fog = new THREE.FogExp2(0xd0e8f5, 0.002)
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.renderer.shadowMap.enabled = true
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
+    this.renderer.toneMappingExposure = 1.0
 
     const onResize = () => {
       for (const eid of query(world, [ThreeCamera])) {
