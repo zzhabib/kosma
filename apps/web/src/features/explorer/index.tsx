@@ -1,13 +1,18 @@
 import { useEffect, useRef } from 'react'
+import { type PanelConfig } from '@/components'
+import { useEntities } from './hooks/use-entities'
+import { EntityList } from './components/entity-list'
+import type { Engine } from '@engine/engine'
 
-interface UseMenuProps {
-  apiKey: string | null
+interface UseExplorerPanelProps {
   open: boolean
   onOpen: () => void
   onClose: () => void
+  engine: Engine | null
 }
 
-export function useMenu({ apiKey, open, onOpen, onClose }: UseMenuProps) {
+export function useExplorerPanel({ open, onOpen, onClose, engine }: UseExplorerPanelProps): PanelConfig {
+  const entities = useEntities(engine)
   const openRef = useRef(open)
   const onOpenRef = useRef(onOpen)
   const onCloseRef = useRef(onClose)
@@ -17,20 +22,21 @@ export function useMenu({ apiKey, open, onOpen, onClose }: UseMenuProps) {
   useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
   useEffect(() => {
-    if (!apiKey) onOpenRef.current()
-  }, [apiKey])
-
-  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
       const isTyping = tag === 'INPUT' || tag === 'TEXTAREA'
-      if (e.key === 'Escape' && openRef.current && apiKey) onCloseRef.current()
-      if (e.key === 'm' && !isTyping && apiKey) {
+      if (e.key === 'Escape' && openRef.current) onCloseRef.current()
+      if (e.key === 'e' && !isTyping) {
         e.preventDefault()
         openRef.current ? onCloseRef.current() : onOpenRef.current()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [apiKey])
+  }, [])
+
+  return {
+    title: 'Explorer',
+    sections: [{ id: 'entities', content: <EntityList entities={entities} /> }],
+  }
 }

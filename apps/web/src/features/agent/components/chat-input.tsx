@@ -42,7 +42,7 @@ export function ChatInput({ onSubmit, onClose, isLoading }: ChatInputProps) {
   }, [])
 
   return (
-    <div className="absolute bottom-8 left-8 pointer-events-auto flex gap-2 items-end">
+    <div className="absolute bottom-8 right-8 pointer-events-auto flex gap-2 items-end">
       <textarea
         ref={textareaRef}
         rows={1}

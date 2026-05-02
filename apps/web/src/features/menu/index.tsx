@@ -1,33 +1,33 @@
 import { useAppContext } from '@/context/app-context'
+import { Button, type PanelConfig } from '@/components'
 import { useMenu } from './hooks/use-menu'
-import { Menu } from './components'
-import { MenuToggle } from './components/menu-toggle'
 import { ApiKeySection } from './components/sections/api-key-section'
 
-export function MenuFeature() {
-  const { apiKey, setApiKey } = useAppContext()
-  const { open, setOpen } = useMenu({ apiKey })
+interface UseMenuPanelProps {
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
+}
 
-  return (
-    <>
-      <Menu
-        open={open}
-        onClose={() => setOpen(false)}
-        dismissible={!!apiKey}
-        sections={[
-          {
-            id: 'api-key',
-            content: (
-              <ApiKeySection
-                apiKey={apiKey}
-                onSetKey={(key) => { setApiKey(key); setOpen(false) }}
-                onClearKey={() => setApiKey(null)}
-              />
-            ),
-          },
-        ]}
-      />
-      {!open && apiKey && <MenuToggle onToggle={() => setOpen(true)} />}
-    </>
-  )
+export function useMenuPanel({ open, onOpen, onClose }: UseMenuPanelProps): PanelConfig {
+  const { apiKey, setApiKey } = useAppContext()
+  useMenu({ apiKey, open, onOpen, onClose })
+
+  return {
+    title: 'Kosma',
+    dismissible: !!apiKey,
+    sections: [
+      {
+        id: 'api-key',
+        content: (
+          <ApiKeySection
+            apiKey={apiKey}
+            onSetKey={(key) => { setApiKey(key); onClose() }}
+            onClearKey={() => setApiKey(null)}
+          />
+        ),
+      },
+    ],
+    footer: apiKey ? <Button onClick={onClose} className="w-full">Continue</Button> : undefined,
+  }
 }
