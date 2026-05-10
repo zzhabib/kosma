@@ -16,6 +16,7 @@ export default function physicsHydrationSystem({ world, physics }: DataModel): v
     if (spec.angularDamping !== undefined) bodyDesc.setAngularDamping(spec.angularDamping)
 
     const body = physics.createRigidBody(bodyDesc)
+    if (spec.lockRotations) body.lockRotations(true, false)
 
     const colliderDesc = (RAPIER.ColliderDesc as any)[spec.shape](...spec.shapeArgs)
     if (spec.restitution !== undefined) colliderDesc.setRestitution(spec.restitution)

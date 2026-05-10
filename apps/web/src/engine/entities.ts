@@ -1,5 +1,5 @@
 import { addEntity, addComponent, createWorld } from 'bitecs'
-import { registry, ThreeSpec, ThreeDesc, PhysicsSpec, PhysicsDesc } from './components'
+import { registry, ThreeSpec, ThreeDesc, PhysicsSpec, PhysicsDesc, FPCamera } from './components'
 
 type EcsWorld = ReturnType<typeof createWorld>
 
@@ -25,6 +25,13 @@ export function spawnEntity(world: EcsWorld, desc: EntityDesc): number {
       PhysicsDesc[eid] = data as PhysicsSpec
       continue
     }
+    if (name === 'FPCamera') {
+      addComponent(world, eid, FPCamera)
+      FPCamera.pitch[eid]     = (data as any).pitch ?? 0
+      FPCamera.yaw[eid]       = (data as any).yaw ?? 0
+      FPCamera.eyeHeight[eid] = (data as any).eyeHeight ?? 0.8
+      continue
+    }
     const component = registry.get(name)
     if (!component) {
       console.warn(`spawnEntity: unknown component "${name}"`)
@@ -39,10 +46,13 @@ export function spawnEntity(world: EcsWorld, desc: EntityDesc): number {
 }
 
 const sampleEntities: EntityDesc[] = [
-  // Camera
+  // Player
   {
     components: [
-      { name: 'OrbitCamera', data: { theta: Math.PI / 4, phi: Math.PI / 3, radius: 8, targetX: 0, targetY: 0, targetZ: 0 } },
+      { name: 'Transform',   data: { px: 0, py: 3, pz: 8, rx: 0, ry: 0, rz: 0, sx: 1, sy: 1, sz: 1 } },
+      { name: 'FPCamera',    data: { pitch: 0, yaw: Math.PI, eyeHeight: 0.8 } },
+      { name: 'PhysicsDesc', data: { body: 'dynamic', shape: 'capsule', shapeArgs: [0.6, 0.3], gravityScale: 1, linearDamping: 0, angularDamping: 0, lockRotations: true } },
+      { name: 'ThreeDesc',   data: { type: 'PerspectiveCamera', args: [90, window.innerWidth / window.innerHeight, 0.1, 2000], rotationOrder: 'YXZ' } },
     ],
   },
   // Baseplate

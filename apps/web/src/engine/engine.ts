@@ -13,6 +13,8 @@ export type InputState = {
   dy: number
   buttons: number
   wheelDelta: number
+  keys: Set<string>
+  pointerLocked: boolean
 }
 
 export type DataModel = {
@@ -52,7 +54,7 @@ export class Engine {
       physics: new RAPIER.World({ x: 0, y: -9.81, z: 0 }),
       scene: new THREE.Scene(),
       world: createWorld(),
-      input: { dx: 0, dy: 0, buttons: 0, wheelDelta: 0 },
+      input: { dx: 0, dy: 0, buttons: 0, wheelDelta: 0, keys: new Set(), pointerLocked: false },
     }
 
     const { scene, world, canvas, input } = this.dataModel
@@ -163,8 +165,13 @@ export class Engine {
 
     canvas.addEventListener('pointerdown',  (e: PointerEvent) => { lastX = e.clientX; lastY = e.clientY }, { signal })
     canvas.addEventListener('pointermove',  (e: PointerEvent) => {
-      input.dx      += e.clientX - lastX
-      input.dy      += e.clientY - lastY
+      if (input.pointerLocked) {
+        input.dx += e.movementX
+        input.dy += e.movementY
+      } else {
+        input.dx += e.clientX - lastX
+        input.dy += e.clientY - lastY
+      }
       input.buttons  = e.buttons
       lastX = e.clientX
       lastY = e.clientY
@@ -172,6 +179,14 @@ export class Engine {
     canvas.addEventListener('pointerup',    (e: PointerEvent) => { input.buttons = e.buttons }, { signal })
     canvas.addEventListener('contextmenu',  (e: MouseEvent)   => e.preventDefault(), { signal })
     canvas.addEventListener('wheel',        (e: WheelEvent)   => { input.wheelDelta += e.deltaY }, { passive: true, signal })
+
+    canvas.addEventListener('click', () => canvas.requestPointerLock(), { signal })
+    document.addEventListener('pointerlockchange', () => {
+      input.pointerLocked = document.pointerLockElement === canvas
+    }, { signal })
+
+    window.addEventListener('keydown', (e: KeyboardEvent) => { input.keys.add(e.code) }, { signal })
+    window.addEventListener('keyup',   (e: KeyboardEvent) => { input.keys.delete(e.code) }, { signal })
 
     return () => controller.abort()
   }

@@ -1,25 +1,32 @@
 import * as THREE from 'three'
 import { query, addComponent, Not } from 'bitecs'
 import type { DataModel } from '@engine/engine'
+import type { ThreeSpec } from '@engine/components'
 import { ThreeDesc, Three3D, getThreeBinding } from '@engine/components'
 
 export const priority = 10
 
+type Creator = (spec: ThreeSpec) => THREE.Object3D
+
+const creators: Partial<Record<string, Creator>> = {
+  Mesh: (spec) => {
+    const geo = new (THREE as any)[spec.geometry!.type](...(spec.geometry!.args ?? []))
+    const mat = new (THREE as any)[spec.material!.type](spec.material?.params ?? {})
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    return mesh
+  },
+}
+
+const defaultCreate: Creator = (spec) => new (THREE as any)[spec.type](...(spec.args ?? []))
+
 export default function threeHydrationSystem({ world, scene }: DataModel): void {
   for (const eid of query(world, [ThreeDesc, Not(Three3D)])) {
     const spec = ThreeDesc[eid]
-    let obj: THREE.Object3D
+    const obj = (creators[spec.type] ?? defaultCreate)(spec)
 
-    if (spec.geometry) {
-      const geo = new (THREE as any)[spec.geometry.type](...(spec.geometry.args ?? []))
-      const mat = new (THREE as any)[spec.material!.type](spec.material?.params ?? {})
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.castShadow = true
-      mesh.receiveShadow = true
-      obj = mesh
-    } else {
-      obj = new (THREE as any)[spec.type](...(spec.args ?? []))
-    }
+    if (spec.rotationOrder) obj.rotation.order = spec.rotationOrder as THREE.EulerOrder
 
     scene.add(obj)
 
